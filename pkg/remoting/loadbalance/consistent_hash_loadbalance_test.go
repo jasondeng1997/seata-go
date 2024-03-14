@@ -18,39 +18,35 @@
 package loadbalance
 
 import (
-	"strings"
+	"fmt"
 	"sync"
+	"testing"
 
-	getty "github.com/apache/dubbo-getty"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/seata/seata-go/pkg/remoting/mock"
 )
 
-func XidLoadBalance(sessions *sync.Map, xid string) getty.Session {
-	var session getty.Session
+func TestConsistentHashLoadBalance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	sessions := &sync.Map{}
 
-	// ip:port:transactionId
-	tmpSplits := strings.Split(xid, ":")
-	if len(tmpSplits) == 3 {
-		ip := tmpSplits[0]
-		port := tmpSplits[1]
-		ipPort := ip + ":" + port
-		sessions.Range(func(key, value interface{}) bool {
-			tmpSession := key.(getty.Session)
-			if tmpSession.IsClosed() {
-				sessions.Delete(tmpSession)
-				return true
-			}
-			connectedIpPort := tmpSession.RemoteAddr()
-			if ipPort == connectedIpPort {
-				session = tmpSession
-				return false
-			}
-			return true
+	for i := 0; i < 3; i++ {
+		session := mock.NewMockTestSession(ctrl)
+		session.EXPECT().IsClosed().Return(false).AnyTimes()
+		session.EXPECT().RemoteAddr().AnyTimes().DoAndReturn(func() string {
+			return "127.0.0.1:8000"
 		})
+		sessions.Store(session, fmt.Sprintf("session-%d", i))
 	}
 
-	if session == nil {
-		return RandomLoadBalance(sessions, xid)
-	}
+	result := ConsistentHashLoadBalance(sessions, "test_xid")
+	assert.NotNil(t, result)
+	assert.False(t, result.IsClosed())
 
-	return session
+	sessions.Range(func(key, value interface{}) bool {
+		t.Logf("key: %v, value: %v", key, value)
+		return true
+	})
 }

@@ -15,25 +15,36 @@
  * limitations under the License.
  */
 
-package compressor
+package rpc
 
-func (c CompressorType) GetCompressor() Compressor {
-	switch c.String() {
-	case CompressorNone.String():
-		return &NoneCompressor{}
-	case CompressorGzip.String():
-		return &Gzip{}
-	case CompressorZip.String():
-		return &Zip{}
-	case CompressorBzip2.String():
-		return &Bzip2{}
-	case CompressorLz4.String():
-		return &Lz4{}
-	case CompressorZstd.String():
-		return &Zstd{}
-	case CompressorDeflate.String():
-		return &DeflateCompress{}
-	default:
-		panic("compressor type not implement")
-	}
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var service = "127.0.0.1:8000"
+
+func TestStatus(t *testing.T) {
+	rpcStatus1 := GetStatus(service)
+	assert.NotNil(t, rpcStatus1)
+	rpcStatus2 := GetStatus(service)
+	assert.Equal(t, rpcStatus1, rpcStatus2)
+}
+
+func TestRemoveStatus(t *testing.T) {
+	old := GetStatus(service)
+	RemoveStatus(service)
+	assert.Equal(t, GetStatus(service), old)
+}
+
+func TestBeginCount(t *testing.T) {
+	BeginCount(service)
+	assert.Equal(t, GetStatus(service).GetActive(), int32(1))
+}
+
+func TestEndCount(t *testing.T) {
+	EndCount(service)
+	assert.Equal(t, GetStatus(service).GetActive(), int32(0))
+	assert.Equal(t, GetStatus(service).GetTotal(), int32(1))
 }

@@ -15,21 +15,16 @@
  * limitations under the License.
  */
 
-package compressor
+package discovery
 
-import (
-	"testing"
+type ConsulRegistryService struct{}
 
-	"github.com/stretchr/testify/assert"
-)
+func (s *ConsulRegistryService) Lookup(key string) ([]*ServiceInstance, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
-func TestCompressorType(t *testing.T) {
-	assert.Equal(t, CompressorNone, CompressorType(0))
-	assert.Equal(t, CompressorGzip, CompressorType(1))
-	assert.Equal(t, CompressorZip, CompressorType(2))
-	assert.Equal(t, CompressorSevenz, CompressorType(3))
-	assert.Equal(t, CompressorBzip2, CompressorType(4))
-	assert.Equal(t, CompressorLz4, CompressorType(5))
-	assert.Equal(t, CompressorDeflate, CompressorType(6))
-	assert.Equal(t, CompressorZstd, CompressorType(7))
+func (s *ConsulRegistryService) Close() {
+	//TODO implement me
+	panic("implement me")
 }

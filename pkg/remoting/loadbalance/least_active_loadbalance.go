@@ -22,27 +22,44 @@ import (
 	"sync"
 	"time"
 
+	"github.com/seata/seata-go/pkg/remoting/rpc"
+
 	getty "github.com/apache/dubbo-getty"
 )
 
-func RandomLoadBalance(sessions *sync.Map, xid string) getty.Session {
-	//collect sync.Map keys
-	//filted out closed session instance
-	var keys []getty.Session
+func LeastActiveLoadBalance(sessions *sync.Map, xid string) getty.Session {
+	var session getty.Session
+	var leastActive int32 = -1
+	leastCount := 0
+	var leastIndexes []getty.Session
 	sessions.Range(func(key, value interface{}) bool {
-		session := key.(getty.Session)
+		session = key.(getty.Session)
 		if session.IsClosed() {
-			sessions.Delete(key)
+			sessions.Delete(session)
 		} else {
-			keys = append(keys, session)
+			active := rpc.GetStatus(session.RemoteAddr()).GetActive()
+			if leastActive == -1 || active < leastActive {
+				leastActive = active
+				leastCount = 1
+				if len(leastIndexes) > 0 {
+					leastIndexes = leastIndexes[:0]
+				}
+				leastIndexes = append(leastIndexes, session)
+			} else if active == leastActive {
+				leastIndexes = append(leastIndexes, session)
+				leastCount++
+			}
 		}
 		return true
 	})
-	//keys eq 0 means there are no available session
-	if len(keys) == 0 {
+
+	if leastCount == 0 {
 		return nil
 	}
-	//random in keys
-	randomIndex := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(keys))
-	return keys[randomIndex]
+
+	if leastCount == 1 {
+		return leastIndexes[0]
+	} else {
+		return leastIndexes[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(leastCount)]
+	}
 }

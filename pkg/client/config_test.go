@@ -68,7 +68,7 @@ func TestLoadPath(t *testing.T) {
 
 	assert.NotNil(t, cfg.ClientConfig.UndoConfig)
 	assert.Equal(t, true, cfg.ClientConfig.UndoConfig.DataValidation)
-	assert.Equal(t, "jackson", cfg.ClientConfig.UndoConfig.LogSerialization)
+	assert.Equal(t, "json", cfg.ClientConfig.UndoConfig.LogSerialization)
 	assert.Equal(t, "undo_log", cfg.ClientConfig.UndoConfig.LogTable)
 	assert.Equal(t, true, cfg.ClientConfig.UndoConfig.OnlyCareUpdateColumns)
 	assert.NotNil(t, cfg.ClientConfig.UndoConfig.CompressConfig)
@@ -111,6 +111,20 @@ func TestLoadPath(t *testing.T) {
 	assert.Equal(t, false, cfg.ServiceConfig.DisableGlobalTransaction)
 	assert.Equal(t, "default", cfg.ServiceConfig.VgroupMapping["default_tx_group"])
 	assert.Equal(t, "127.0.0.1:8091", cfg.ServiceConfig.Grouplist["default"])
+
+	assert.NotNil(t, cfg.RegistryConfig)
+	assert.Equal(t, "file", cfg.RegistryConfig.Type)
+	assert.Equal(t, "seatago.yml", cfg.RegistryConfig.File.Name)
+	assert.Equal(t, "seata-server", cfg.RegistryConfig.Nacos.Application)
+	assert.Equal(t, "127.0.0.1:8848", cfg.RegistryConfig.Nacos.ServerAddr)
+	assert.Equal(t, "SEATA_GROUP", cfg.RegistryConfig.Nacos.Group)
+	assert.Equal(t, "test-namespace", cfg.RegistryConfig.Nacos.Namespace)
+	assert.Equal(t, "test-username", cfg.RegistryConfig.Nacos.Username)
+	assert.Equal(t, "test-password", cfg.RegistryConfig.Nacos.Password)
+	assert.Equal(t, "test-access-key", cfg.RegistryConfig.Nacos.AccessKey)
+	assert.Equal(t, "test-secret-key", cfg.RegistryConfig.Nacos.SecretKey)
+	assert.Equal(t, "default", cfg.RegistryConfig.Etcd3.Cluster)
+	assert.Equal(t, "http://localhost:2379", cfg.RegistryConfig.Etcd3.ServerAddr)
 
 	// reset flag.CommandLine
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
